@@ -17,7 +17,17 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9\.-]*$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+        ];
+    }
+
+    //message for no white space
+    // 'regex:/^\S*$/u' => 'No white space allowed',
+    public function messages()
+    {
+        return [
+            'username.regex' => 'Only letters, numbers, dashes and periods are allowed.',
         ];
     }
 }
