@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,7 @@ class ProfileController extends Controller
         return Inertia::render('Profile/View', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'user' => $user
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -68,5 +69,31 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function updateImage(Request $request, User $user){
+        $request->validate([
+            'cover' => ['image', 'nullable', 'mimes:jpeg,png,jpg,svg'],
+            'avatar' => ['image', 'nullable'],
+        ]);
+
+        //save file cover to cover/user-id/cover.jpg
+        if($request->hasFile('cover')){
+            $cover_path = $request->file('cover')->storeAs($user->id, 'cover', 'public');
+            $cover_path = asset('storage/'.$cover_path);
+        }
+
+        //save file avatar to avatar/user-id/avatar.jpg
+        if($request->hasFile('avatar')){
+            $avatar_path = $request->file('avatar')->storeAs($user->id, 'avatar', 'public');
+            $avatar_path = asset('storage/'.$avatar_path);
+        }
+
+        $request->user()->update([
+            'cover_path' => $cover_path ?? null,
+            'avatar_path' => $avatar_path ?? null,
+        ]);
+
+        return back()->with('status', 'profile-image-updated');
     }
 }

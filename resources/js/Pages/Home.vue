@@ -19,7 +19,7 @@ defineProps<{
     <AuthenticatedLayout>
 
     
-    <main class="grid lg:grid-cols-12 gap-3 px-5 py-6 relative">
+    <main class="grid lg:grid-cols-12 gap-4 px-5 py-6 relative">
         <!-- Groups -->
         <div class="lg:col-span-3 row-start-1 row-end-2 bg-white p-3 rounded-lg h-fit lg:sticky lg:top-6">
             <GroupList/>
