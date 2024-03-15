@@ -8,6 +8,7 @@ import { computed, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { CheckCircleIcon, PencilSquareIcon, XCircleIcon } from '@heroicons/vue/24/solid';
 import Notification from '@/Components/app/Notification.vue';
+import { CameraIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps<{
     mustVerifyEmail: boolean;
@@ -24,16 +25,21 @@ const imagesForm = useForm<{
     avatar: File | string | undefined | null;
 
 }>({
-    cover: props.user.cover_path,
-    avatar: props.user.avatar_path,
+    cover: null,
+    avatar: null,
 })
+
 const coverImageSrc = ref<string | null>(null);
+const avatarImageSrc = ref<string | null>(null);
+const changingCover = ref(false);
+const changingAvatar = ref(false);
 
 const isMyProfile = computed(() => {
     return props.user?.id === usePage().props.auth?.user?.id;
 });
 
 function onCoverChange(e: Event) {
+    changingCover.value = true;
     imagesForm.cover = (e.target as HTMLInputElement).files?.[0];
 
     if (imagesForm.cover) {
@@ -45,24 +51,46 @@ function onCoverChange(e: Event) {
     }
 }
 
+function onAvatarChange(e: Event) {
+    changingAvatar.value = true;
+    imagesForm.avatar = (e.target as HTMLInputElement).files?.[0];
+
+    if (imagesForm.avatar) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            avatarImageSrc.value = e.target?.result as string;
+        }
+        reader.readAsDataURL(imagesForm.avatar);
+    }
+}
+
 function cancleCoverChange() {
-    coverImageSrc.value = null;
+    changingCover.value = false;
     imagesForm.cover = null;
 }
 
-function submitCoverChange(){
+function cancleAvatarChange() {
+    changingAvatar.value = false;
+    imagesForm.avatar = null;
+}
+
+function submitCoverChange() {
     imagesForm.post(route('profile.update-images', props.user.id));
     cancleCoverChange();
 }
 
-console.log(props.status);
+function submitAvatarChange() {
+    imagesForm.post(route('profile.update-images', props.user.id));
+    cancleAvatarChange();
+}
+
 </script>
 
 <template>
     <AuthenticatedLayout>
         <main class="container mx-auto my-5">
 
-            <Notification :status="status" :message="errors.cover" />
+            <Notification :status="status" :errors="errors" />
 
             <!-- Cover -->
             <section class="relative">
@@ -71,9 +99,30 @@ console.log(props.status);
                         alt="" srcset="">
                 </div>
                 <div
-                    class="absolute bottom-7 w-[40%] flex gap-3 items-center left-7 rounded-full p-4 backdrop-brightness-90 backdrop-blur-md">
-                    <div class="w-24 rounded-full overflow-hidden border-2 border-x-pink-400">
-                        <img src="https://randomuser.me/api/portraits/women/56.jpg" alt="" srcset="">
+                    class="absolute bottom-7 w-[25rem] flex gap-3 items-center left-7 rounded-full p-4 backdrop-brightness-90 backdrop-blur-md">
+                    <!-- Avatar image -->
+                    <div class="relative w-24 h-24 rounded-full overflow-hidden border-2 border-x-pink-400 group">
+                        <img :src="avatarImageSrc || user.avatar_path || '/img/avatar.png'" alt="" srcset=""
+                            class="group-hover:brightness-50 transition-all w-full h-full object-cover">
+                        <!-- Avatar action button -->
+                        <div v-if="changingAvatar" class="flex items-center gap-2 absolute bottom-7 left-3">
+                            <button @click="cancleAvatarChange"
+                                class="px-2 py-2 bg-red-500 rounded-full text-black group-hover:flex items-center gap-3 text-sm hover:scale-110 transition-all overflow-hidden">
+                                <XCircleIcon class="w-4 h-4" />
+                            </button>
+                            <button @click="submitAvatarChange"
+                                class="px-2 py-2 bg-green-500 rounded-full text-black group-hover:flex items-center gap-3 text-sm hover:scale-110 transition-all overflow-hidden">
+                                <CheckCircleIcon class="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div v-else class="absolute bottom-7 left-8 hidden group-hover:flex">
+                            <button
+                                class="px-2 py-2 flex bg-white rounded-full text-black items-center gap-3 text-sm hover:scale-110 transition-all overflow-hidden">
+                                <CameraIcon class="w-4 h-4" />
+                                <input type="file" name="" id="" class="absolute opacity-0 cursor-pointer"
+                                    @change="onAvatarChange">
+                            </button>
+                        </div>
                     </div>
                     <div class="text-white">
                         <h1 class="text-lg">{{ user.name }}</h1>
@@ -82,7 +131,7 @@ console.log(props.status);
                 </div>
                 <div class="absolute top-5 right-5" v-if="isMyProfile">
                     <!-- Cover action button -->
-                    <div v-if="coverImageSrc" class="flex gap-2">
+                    <div v-if="changingCover" class="flex gap-2">
                         <button
                             class="px-3 py-2 backdrop-blur-lg backdrop-brightness-50 rounded-md text-white flex items-center gap-3 text-sm hover:scale-110 transition-all overflow-hidden"
                             @click="cancleCoverChange">
@@ -129,33 +178,33 @@ console.log(props.status);
 
                     <TabPanels class="mt-2">
                         <TabPanel key="about" :class="[
-                        'rounded-xl bg-white p-3',
-                        ' focus:outline-none ring-0',
-                    ]" v-if="isMyProfile">
+                'rounded-xl bg-white p-3',
+                ' focus:outline-none ring-0',
+            ]" v-if="isMyProfile">
                             <Edit :must-verify-email="mustVerifyEmail" :status="status" />
                         </TabPanel>
                         <TabPanel key="posts" :class="[
-                        'rounded-xl bg-white p-3',
-                        ' focus:outline-none ring-0 border-0',
-                    ]">
+                'rounded-xl bg-white p-3',
+                ' focus:outline-none ring-0 border-0',
+            ]">
                             Posts
                         </TabPanel>
                         <TabPanel key="followers" :class="[
-                        'rounded-xl bg-white p-3',
-                        ' focus:outline-none ring-0 border-0',
-                    ]">
+                'rounded-xl bg-white p-3',
+                ' focus:outline-none ring-0 border-0',
+            ]">
                             Followers
                         </TabPanel>
                         <TabPanel key="followings" :class="[
-                        'rounded-xl bg-white p-3',
-                        ' focus:outline-none ring-0 border-0',
-                    ]">
+                'rounded-xl bg-white p-3',
+                ' focus:outline-none ring-0 border-0',
+            ]">
                             Followings
                         </TabPanel>
                         <TabPanel key="photos" :class="[
-                        'rounded-xl bg-white p-3',
-                        ' focus:outline-none ring-0 border-0',
-                    ]">
+                'rounded-xl bg-white p-3',
+                ' focus:outline-none ring-0 border-0',
+            ]">
                             Photos
                         </TabPanel>
                     </TabPanels>

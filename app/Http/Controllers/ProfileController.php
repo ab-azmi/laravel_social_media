@@ -47,7 +47,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return back()->with('status', 'User updated successfully!');
     }
 
     /**
@@ -72,28 +72,26 @@ class ProfileController extends Controller
     }
 
     public function updateImage(Request $request, User $user){
+        
         $request->validate([
             'cover' => ['image', 'nullable', 'mimes:jpeg,png,jpg,svg'],
-            'avatar' => ['image', 'nullable'],
+            'avatar' => ['image', 'nullable', 'mimes:jpeg,png,jpg,svg'],
         ]);
 
         //save file cover to cover/user-id/cover.jpg
         if($request->hasFile('cover')){
             $cover_path = $request->file('cover')->storeAs($user->id, 'cover', 'public');
             $cover_path = asset('storage/'.$cover_path);
+            $user->update(['cover_path' => $cover_path]);
         }
 
         //save file avatar to avatar/user-id/avatar.jpg
         if($request->hasFile('avatar')){
             $avatar_path = $request->file('avatar')->storeAs($user->id, 'avatar', 'public');
             $avatar_path = asset('storage/'.$avatar_path);
+            $user->update(['avatar_path' => $avatar_path]);
         }
 
-        $request->user()->update([
-            'cover_path' => $cover_path ?? null,
-            'avatar_path' => $avatar_path ?? null,
-        ]);
-
-        return back()->with('status', 'profile-image-updated');
+        return back()->with('status', 'Profile image updated successfully!');
     }
 }
