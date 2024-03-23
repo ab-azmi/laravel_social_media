@@ -49,11 +49,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
-    public function getSlugOptions() : SlugOptions
-{
-    return SlugOptions::create()
-        ->generateSlugsFrom('name')
-        ->saveSlugsTo('username')
-        ->doNotGenerateSlugsOnUpdate();
-}
+    public function getSlugOptions(): SlugOptions
+    {
+        return SlugOptions::create()
+            ->generateSlugsFrom('name')
+            ->saveSlugsTo('username')
+            ->doNotGenerateSlugsOnUpdate();
+    }
 }

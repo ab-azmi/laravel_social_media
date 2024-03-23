@@ -5,10 +5,13 @@ import FollowerList from '@/Components/app/FollowerList.vue';
 import PostList from '@/Components/app/PostList.vue';
 import CreatePost from '@/Components/app/CreatePost.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { defineProps } from 'vue';
+import { Post } from '@/types';
 
 defineProps<{
     canLogin?: boolean;
     canRegister?: boolean;
+    posts?: Object;
 }>();
 </script>
 
@@ -18,7 +21,6 @@ defineProps<{
 
     <AuthenticatedLayout>
 
-    
     <main class="grid lg:grid-cols-12 gap-4 px-5 py-6 relative">
         <!-- Groups -->
         <div class="lg:col-span-3 row-start-1 row-end-2 bg-white p-3 rounded-lg h-fit lg:sticky lg:top-6">
@@ -29,7 +31,7 @@ defineProps<{
                 <CreatePost/>
             </div>
             <div class="">
-                <PostList/>
+                <PostList :posts="posts"/>
             </div>
         </div>
         <div class="lg:col-span-3 row-start-2 row-end-3 lg:row-auto bg-white p-3 rounded-lg h-fit lg:sticky lg:top-6">

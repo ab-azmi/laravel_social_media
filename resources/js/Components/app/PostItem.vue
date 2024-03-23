@@ -1,33 +1,20 @@
 <script setup lang="ts">
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
+import { Post } from '@/types';
 
 defineProps<{
-    post: {
-        id: number;
-        user: {
-            name: string;
-            username: string;
-            avatar: string;
-        };
-        body: string;
-        created_at: string;
-        attachments?: null | Array<{
-            id: number;
-            name: string;
-            url: string;
-            mime: string;
-        }>;
-        group?: null | {
-            id: number;
-            name: string;
-        };
-    }
+    post: Post
 }>();
 
 function isImage(attachment: { mime: string }) {
     const mime = attachment.mime.split('/')[0];
     return mime.toLowerCase() === 'image';
+}
+
+function formatDate(dateString: string) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
 }
 
 </script>
@@ -36,8 +23,9 @@ function isImage(attachment: { mime: string }) {
     <div class="my-3 p-3 bg-white rounded-lg">
         <!-- Post Head -->
         <section class="flex gap-3 items-start group">
-            <a href="#" class="w-10 rounded-full overflow-hidden">
-                <img :src="post.user.avatar" alt="" class="group-hover:scale-125 transition-all">
+            <a href="#" class="w-10 h-10 rounded-full overflow-hidden">
+                <img :src="post.user.avatar_path" alt=""
+                    class="h-full object-cover group-hover:scale-125 transition-all">
             </a>
             <div class="flex flex-col gap-1">
                 <div class="flex gap-2 items-center">
@@ -47,21 +35,25 @@ function isImage(attachment: { mime: string }) {
                     </span>
                     <a v-if="post.group" href="#" class="font-bold hover:underline">{{ post.group?.name }}</a>
                 </div>
-                <p class="text-xs text-slate-500">{{ post.created_at }}</p>
+                <p class="text-xs text-slate-500">{{ formatDate(post.created_at) }}</p>
             </div>
         </section>
         <!-- Post Body -->
-        <section class="my-2">
+        <section class="mt-3">
             <Disclosure v-slot="{ open }">
                 <div v-if="!open" v-html="post.body.substring(0, 150)"></div>
-                <DisclosurePanel>
+
+                <template v-if="post.body.length > 150">
+                    <DisclosurePanel>
                     <div v-html="post.body"></div>
                 </DisclosurePanel>
                 <DisclosureButton class="flex justify-end w-full">
-                    <span class="text-gray-500 hover:underline">
+                    <span class="text-gray-500 hover:underline mt-2">
                         {{ open ? 'Read less' : 'Read more' }}
                     </span>
                 </DisclosureButton>
+                </template>
+
             </Disclosure>
         </section>
         <!-- Post Attachments -->
@@ -69,7 +61,8 @@ function isImage(attachment: { mime: string }) {
             <div v-for="att of post.attachments">
                 <div v-if="isImage(att)" class="relative w-fit">
                     <img :src="att.url" alt="" class="object-cover rounded-lg">
-                    <span class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
+                    <span
+                        class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
                         <ArrowDownTrayIcon class="w-5 h-5" />
                     </span>
                 </div>
@@ -89,11 +82,13 @@ function isImage(attachment: { mime: string }) {
         <!-- Post Actions -->
         <section class="mt-4 w-full flex gap-10">
             <button class="flex gap-1 hover:gap-2 transition-all text-slate-500 group">
-                <HeartIcon class="w-5 h-5 text-pink-400 group-hover:scale-150 transition-all group-hover:text-red-500 animate-pulse"/>
+                <HeartIcon
+                    class="w-5 h-5 text-pink-400 group-hover:scale-150 transition-all group-hover:text-red-500 animate-pulse" />
                 Like
             </button>
             <button class="flex gap-1 hover:gap-2 transition-all text-slate-500 group">
-                <ChatBubbleOvalLeftEllipsisIcon class="w-5 h-5 text-sky-400 group-hover:scale-150 transition-all group-hover:text-blue-500" />
+                <ChatBubbleOvalLeftEllipsisIcon
+                    class="w-5 h-5 text-sky-400 group-hover:scale-150 transition-all group-hover:text-blue-500" />
                 Comment
             </button>
         </section>
