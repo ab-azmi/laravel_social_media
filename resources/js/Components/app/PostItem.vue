@@ -1,41 +1,68 @@
 <script setup lang="ts">
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisIcon, ChevronRightIcon } from '@heroicons/vue/24/solid';
+import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/solid';
 import { Post } from '@/types';
+import PostUserHeader from './PostUserHeader.vue';
+import { ref } from 'vue';
 
-defineProps<{
+const props = defineProps<{
     post: Post
 }>();
+
+const emit = defineEmits(['editModal'])
+
 
 function isImage(attachment: { mime: string }) {
     const mime = attachment.mime.split('/')[0];
     return mime.toLowerCase() === 'image';
 }
 
-function formatDate(dateString: string) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+function showEditModal(){
+    emit('editModal', props.post)
 }
-
 </script>
 
 <template>
     <div class="my-3 p-3 bg-white rounded-lg">
         <!-- Post Head -->
-        <section class="flex gap-3 items-start group">
-            <a href="#" class="w-10 h-10 rounded-full overflow-hidden">
-                <img :src="post.user.avatar_path" alt=""
-                    class="h-full object-cover group-hover:scale-125 transition-all">
-            </a>
-            <div class="flex flex-col gap-1">
-                <div class="flex gap-2 items-center">
-                    <a href="#" class="font-bold hover:underline">{{ post.user.name }}</a>
-                    <span v-if="post.group">
-                        <ChevronRightIcon class="w-3 h-3 text-slate-800" />
-                    </span>
-                    <a v-if="post.group" href="#" class="font-bold hover:underline">{{ post.group?.name }}</a>
-                </div>
-                <p class="text-xs text-slate-500">{{ formatDate(post.created_at) }}</p>
+        <section class="flex gap-3 items-center">
+            <PostUserHeader :post="post" />
+            <div class="flex-1 text-right">
+                <Menu as="div" class="relative inline-block text-left">
+                    <MenuButton>
+                        <EllipsisVerticalIcon class="w-5 h-5 text-slate-500" />
+                    </MenuButton>
+                    <Transition enter-active-class="transition duration-100 ease-out"
+                        enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0">
+                        <MenuItems
+                            class="absolute right-0 mt-2 w-fit origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+                            <div class="px-1 py-1">
+                                <MenuItem v-slot="{ active }">
+                                <button @click="showEditModal" :class="[
+                                        active ? 'bg-blue-500 text-white' : 'text-gray-900',
+                                        'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
+                                    ]">
+                                    <PencilIcon class="w-5 h-5"/>
+                                    Edit
+                                </button>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                <button :class="[
+                                        active ? 'bg-blue-500 text-white' : 'text-gray-900',
+                                        'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
+                                    ]">
+                                    <TrashIcon class="w-5 h-5"/>
+                                    Delete
+                                </button>
+                                </MenuItem>
+
+                            </div>
+                        </MenuItems>
+                    </Transition>
+                </Menu>
             </div>
         </section>
         <!-- Post Body -->
@@ -45,13 +72,13 @@ function formatDate(dateString: string) {
 
                 <template v-if="post.body.length > 150">
                     <DisclosurePanel>
-                    <div v-html="post.body"></div>
-                </DisclosurePanel>
-                <DisclosureButton class="flex justify-end w-full">
-                    <span class="text-gray-500 hover:underline mt-2">
-                        {{ open ? 'Read less' : 'Read more' }}
-                    </span>
-                </DisclosureButton>
+                        <div v-html="post.body"></div>
+                    </DisclosurePanel>
+                    <DisclosureButton class="flex justify-end w-full">
+                        <span class="text-gray-500 hover:underline mt-2">
+                            {{ open ? 'Read less' : 'Read more' }}
+                        </span>
+                    </DisclosureButton>
                 </template>
 
             </Disclosure>
@@ -93,4 +120,5 @@ function formatDate(dateString: string) {
             </button>
         </section>
     </div>
+
 </template>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Post;
 
+use App\Models\Post;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
@@ -11,7 +12,11 @@ class UpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $post = Post::where('id', $this->route('post')->id)
+            ->where('user_id', auth()->id())
+            ->first();
+            
+        return $post ? true : false;
     }
 
     /**
@@ -22,7 +27,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'body' => 'nullable|string',
         ];
     }
 }

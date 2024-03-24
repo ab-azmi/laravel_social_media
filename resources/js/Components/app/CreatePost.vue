@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref} from 'vue';
-import TextInput from '@/Components/TextInput.vue';
+import TextAreaInput from '@/Components/TextAreaInput.vue';
 import { useForm } from '@inertiajs/vue3';
 
 const creating = ref<boolean>(false);
@@ -22,14 +22,14 @@ function submitPost(){
 
 <template>
     <section class="p-3">
-        <TextInput @click="creating = !creating" v-model="postForm.body" class="px-2 py-3 w-full text-slate-500 border border-gray-300 rounded-lg mb-3" placeholder="Click here to cerate new post">
-        </TextInput>
+        <TextAreaInput @click="creating = !creating" v-model="postForm.body" class=" w-full text-slate-500 border border-gray-300 rounded-lg mb-3" placeholder="Click here to cerate new post">
+        </TextAreaInput>
         <div v-if="creating" class="w-full flex justify-between">
-            <button class="relative overflow-hidden px-3 py-2 text-sm rounded-lg bg-blue-400 hover:bg-blue-900 hover:text-white transition">
+            <button class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-green-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2">
                 Attach file
                 <input type="file" class="absolute top-0 left-0 opacity-0">
             </button>
-            <button @click="submitPost" class="px-3 py-2 text-sm rounded-lg bg-green-400 hover:bg-green-900 hover:text-white transition">Submit</button>
+            <button @click="submitPost" class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Submit</button>
         </div>
     </section>
 </template>

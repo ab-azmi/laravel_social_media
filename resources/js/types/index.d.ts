@@ -15,6 +15,7 @@ export interface Post {
     user: User;
     body: string;
     created_at: string;
+    updated_at: string;
     attachments?: null | Array<{
         id: number;
         name: string;
@@ -24,6 +25,20 @@ export interface Post {
     group?: null | {
         id: number;
         name: string;
+    };
+}
+
+export interface Posts {
+    data: Array<Post>;
+    links: {
+        next: string;
+        prev: string;
+    };
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
     };
 }
 
