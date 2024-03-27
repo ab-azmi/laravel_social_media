@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/solid';
-import { Attachment, Post } from '@/types';
+import { Post } from '@/types';
 import PostUserHeader from './PostUserHeader.vue';
 import { ref } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
@@ -44,6 +44,10 @@ function deletePost() {
     })
 
 }
+
+function downloadAttachment(attachment: { path: string }) {
+    window.open(attachment.path, '_blank');
+}
 </script>
 
 <template>
@@ -52,7 +56,7 @@ function deletePost() {
         <section class="flex gap-3 items-center">
             <PostUserHeader :post="post" />
             <div class="flex-1 text-right">
-                <Menu as="div" class="relative inline-block text-left">
+                <Menu as="div" class="relative inline-block text-left z-[99]">
                     <MenuButton>
                         <EllipsisVerticalIcon class="w-5 h-5 text-slate-500" />
                     </MenuButton>
@@ -108,25 +112,33 @@ function deletePost() {
             </Disclosure>
         </section>
         <!-- Post Attachments -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-2">
-            <div v-for="att of post.attachments">
-                <div v-if="isImage(att)" class="relative w-fit">
-                    <img :src="att.url" alt="" class="object-cover rounded-lg">
-                    <span
-                        class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
-                        <ArrowDownTrayIcon class="w-5 h-5" />
-                    </span>
-                </div>
-                <div v-else
-                    class="group flex items-center bg-slate-100 rounded-lg py-6 px-3 justify-between text-slate-600 cursor-pointer">
-                    <div class="flex gap-3">
-                        <DocumentIcon class="w-6 h-6 text-slate-500" />
-                        {{ att.name }}
+        <section v-if="post.attachments" class="grid gap-3 my-2" :class="[post.attachments?.length > 1 ? 'grid-cols-2': 'grid-cols-1']">
+            <div v-for="(att, i) of post.attachments?.slice(0, 4)">
+                <div v-if="i === 3" class="bg-slate-100 rounded-lg overflow-hidden w-full h-full text-slate-600">
+                    <div v-if="isImage(att)" class="relative w-full h-full">
+                        <img :src="att.path" alt="" class="object-cover rounded-lg blur-lg brightness-75">
+                        <span class="absolute text-2xl top-1/2 left-[40%] text-white" > +{{ post.attachments.length - 3 }} more</span>
                     </div>
-
-                    <span class="hidden group-hover:block">
-                        <ArrowDownTrayIcon class="w-6 h-6 text-slate-500" />
-                    </span>
+                </div>
+                <div v-else class="w-full h-full">
+                    <div v-if="isImage({ mime: att.mime })" class="relative rounded-lg w-full h-full group overflow-hidden">
+                        <img :src="att.path" alt="" class="object-cover w-full h-full group-hover:scale-125 transition-all">
+                        <span @click="downloadAttachment(att)"
+                            class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
+                            <ArrowDownTrayIcon class="w-5 h-5" />
+                        </span>
+                    </div>
+                    <div v-else
+                        class="group flex items-center bg-slate-100 rounded-lg py-6 px-3 justify-between text-slate-600 cursor-pointer">
+                        <div class="flex gap-3">
+                            <DocumentIcon class="w-6 h-6 text-slate-500" />
+                            {{ att.name }}
+                        </div>
+    
+                        <span class="hidden group-hover:block">
+                            <ArrowDownTrayIcon class="w-6 h-6 text-slate-500" />
+                        </span>
+                    </div>
                 </div>
             </div>
         </section>

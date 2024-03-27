@@ -13,7 +13,7 @@ export interface User {
 export interface Attachment {
     id?: number;
     name?: string;
-    url: string;
+    path: string;
     mime: string;
     size?: number;
     file?: File;

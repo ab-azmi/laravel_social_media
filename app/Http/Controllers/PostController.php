@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Post\StoreRequest;
-use App\Http\Requests\Post\UpdateRequest;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Post\StoreRequest;
+use App\Http\Requests\Post\UpdateRequest;
 
 class PostController extends Controller
 {
@@ -17,11 +19,37 @@ class PostController extends Controller
     public function store(StoreRequest $request)
     {
         $data = $request->validated();
+        
+        DB::beginTransaction();
+        $allPaths = [];
 
-        $post = Post::create([
-            'user_id' => auth()->id(),
-            'body' => $data['body'],
-        ]);
+        try {
+            $post = Post::create([
+                'user_id' => auth()->id(),
+                'body' => $data['body'],
+            ]);
+    
+            $attachments = $data['attachments'] ?? [];
+            foreach ($attachments as $attachment) {
+                $path = $attachment->storeAs('attachments/'.$post->id, $attachment->hashName(), 'public');
+                $path = asset('storage/'.$path); 
+                $allPaths[] = $path;
+                $post->attachments()->create([
+                    'path' => $path,
+                    'name' => $attachment->getClientOriginalName(),
+                    'mime' => $attachment->getClientMimeType(),
+                    'size' => $attachment->getSize(),
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            foreach ($allPaths as $path) {
+                Storage::disk('public')->delete($path);
+            }
+            throw $th;
+        }
+        DB::commit();
 
         return back();
     }
@@ -62,8 +90,16 @@ class PostController extends Controller
             abort(403);
         }
 
-        $post->delete();
-
+        DB::beginTransaction();
+        try {
+            $post->attachments()->delete();
+            $post->delete();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+        DB::commit();
+        
         return back();
     }
 }

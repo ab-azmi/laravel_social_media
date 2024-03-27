@@ -27,7 +27,8 @@ const show = computed({
 })
 
 const postForm = useForm({
-    body: props.post?.body
+    body: props.post?.body,
+    attachments: Array<File>()
 })
 
 const attachments = ref<Array<Attachment>>([])
@@ -66,19 +67,20 @@ function closeModal() {
 }
 
 function submitForm() {
+    postForm.attachments = attachments.value.map(att => att.file as File);
+
     if (props.post) {
         postForm.put(route('posts.update', props.post?.id), {
             preserveScroll: true,
             onSuccess: () => {
-                show.value = false
+                closeModal()
             }
         })
     } else {
         postForm.post(route('posts.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                show.value = false
-                postForm.body = ''
+                closeModal()
             }
         })
     }
@@ -90,7 +92,7 @@ async function onAttachmentChoose($event: Event) {
         var att = {
             name: file.name,
             file: file,
-            url: await readFile(file),
+            path: await readFile(file),
             mime: file.type
         }
 
@@ -162,13 +164,13 @@ function isImage(attachment: { mime: string }) {
                                     <div v-for="(att, i) of attachments.slice(0, 4)">
                                         <div v-if="i === 3" class="bg-slate-100 rounded-lg overflow-hidden w-full h-full text-slate-600">
                                             <div v-if="isImage(att)" class="relative w-fit">
-                                                <img :src="att.url" alt="" class="object-cover rounded-lg blur-lg brightness-75">
+                                                <img :src="att.path" alt="" class="object-cover rounded-lg blur-lg brightness-75">
                                                 <span class="absolute top-1/2 left-[30%] text-white"> +{{ attachments.length - 3 }} more</span>
                                             </div>
                                         </div>
                                         <div v-else>
                                             <div v-if="isImage(att)" class="relative w-fit">
-                                                <img :src="att.url" alt="" class="object-cover rounded-lg">
+                                                <img :src="att.path" alt="" class="object-cover rounded-lg">
                                                 <span @click="attachments.splice(attachments.indexOf(att), 1)"
                                                     class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
                                                     <TrashIcon class="w-5 h-5" />
@@ -192,7 +194,7 @@ function isImage(attachment: { mime: string }) {
 
                                 <div class="mt-4 flex gap-4 justify-end">
                                     <button type="button"
-                                        class="relative inline-flex gap-2 items-center justify-center rounded-md border border-transparent bg-purple-100 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+                                        class="relative overflow-hidden inline-flex gap-2 items-center justify-center rounded-md border border-transparent bg-purple-100 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
                                         <PaperClipIcon class="w-4 h-4" />
                                         Attachments
                                         <input multiple @change="onAttachmentChoose" type="file"

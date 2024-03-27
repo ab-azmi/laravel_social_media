@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PostResource extends JsonResource
+class PostAttachmentResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,12 +16,9 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'body' => $this->body,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'user' => new UserResource($this->user),
-            'group' => $this->group,
-            'attachments' => PostAttachmentResource::collection($this->attachments),
+            'name' => $this->name,
+            'mime' => $this->mime,
+            'path' => $this->path,
         ];
     }
 }

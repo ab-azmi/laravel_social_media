@@ -23,6 +23,8 @@ class StoreRequest extends FormRequest
     {
         return [
             'body' => 'nullable|string',
+            'attachments' => 'array|max:12',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar|max:10240', 
         ];
     }
 
