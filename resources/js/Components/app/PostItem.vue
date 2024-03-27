@@ -4,6 +4,14 @@ import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisI
 import { Post } from '@/types';
 import PostUserHeader from './PostUserHeader.vue';
 import { ref } from 'vue';
+import { router, useForm } from '@inertiajs/vue3';
+import {
+    TransitionRoot,
+    TransitionChild,
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+} from '@headlessui/vue'
 
 const props = defineProps<{
     post: Post
@@ -11,14 +19,30 @@ const props = defineProps<{
 
 const emit = defineEmits(['editModal'])
 
+const isDeleteModal = ref(false)
+
+function closeDeleteModal() {
+    isDeleteModal.value = false
+}
+function openDeleteModal() {
+    isDeleteModal.value = true
+}
 
 function isImage(attachment: { mime: string }) {
     const mime = attachment.mime.split('/')[0];
     return mime.toLowerCase() === 'image';
 }
 
-function showEditModal(){
+function showEditModal() {
     emit('editModal', props.post)
+}
+
+function deletePost() {
+    // delete request
+    useForm({}).delete(route('posts.destroy', props.post.id), {
+        preserveScroll: true
+    })
+
 }
 </script>
 
@@ -42,19 +66,19 @@ function showEditModal(){
                             <div class="px-1 py-1">
                                 <MenuItem v-slot="{ active }">
                                 <button @click="showEditModal" :class="[
-                                        active ? 'bg-blue-500 text-white' : 'text-gray-900',
-                                        'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
-                                    ]">
-                                    <PencilIcon class="w-5 h-5"/>
+                active ? 'bg-blue-500 text-white' : 'text-gray-900',
+                'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
+            ]">
+                                    <PencilIcon class="w-5 h-5" />
                                     Edit
                                 </button>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                <button :class="[
-                                        active ? 'bg-blue-500 text-white' : 'text-gray-900',
-                                        'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
-                                    ]">
-                                    <TrashIcon class="w-5 h-5"/>
+                                <button @click="openDeleteModal" :class="[
+                active ? 'bg-blue-500 text-white' : 'text-gray-900',
+                'group flex gap-3 w-full items-center rounded-md px-2 py-2 text-sm',
+            ]">
+                                    <TrashIcon class="w-5 h-5" />
                                     Delete
                                 </button>
                                 </MenuItem>
@@ -68,11 +92,11 @@ function showEditModal(){
         <!-- Post Body -->
         <section class="mt-3">
             <Disclosure v-slot="{ open }">
-                <div v-if="!open" v-html="post.body.substring(0, 150)"></div>
+                <div class="ck-content-output" v-if="!open" v-html="post.body.substring(0, 150)"></div>
 
                 <template v-if="post.body.length > 150">
                     <DisclosurePanel>
-                        <div v-html="post.body"></div>
+                        <div class="ck-content-output" v-html="post.body"></div>
                     </DisclosurePanel>
                     <DisclosureButton class="flex justify-end w-full">
                         <span class="text-gray-500 hover:underline mt-2">
@@ -119,6 +143,49 @@ function showEditModal(){
                 Comment
             </button>
         </section>
+
+        <!-- Delete Modal -->
+        <TransitionRoot appear :show="isDeleteModal" as="template">
+            <Dialog as="div" @close="closeDeleteModal" class="relative z-10">
+                <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0"
+                    enter-to="opacity-100" leave="duration-200 ease-in" leave-from="opacity-100" leave-to="opacity-0">
+                    <div class="fixed inset-0 bg-black/25" />
+                </TransitionChild>
+
+                <div class="fixed inset-0 overflow-y-auto">
+                    <div class="flex min-h-full items-center justify-center p-4 text-center">
+                        <TransitionChild as="template" enter="duration-300 ease-out" enter-from="opacity-0 scale-95"
+                            enter-to="opacity-100 scale-100" leave="duration-200 ease-in"
+                            leave-from="opacity-100 scale-100" leave-to="opacity-0 scale-95">
+                            <DialogPanel
+                                class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                                    Delete Confirmation
+                                </DialogTitle>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">
+                                        Your action cannot be undone. Are you sure want to delete the post?
+                                    </p>
+                                </div>
+
+                                <div class="mt-4 flex gap-3">
+                                    <button type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                        @click="deletePost">
+                                        Delete
+                                    </button>
+                                    <button type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        @click="closeDeleteModal">
+                                        Cancle
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
+            </Dialog>
+        </TransitionRoot>
     </div>
 
 </template>

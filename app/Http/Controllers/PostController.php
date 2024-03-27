@@ -58,6 +58,12 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        if ($post->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $post->delete();
+
+        return back();
     }
 }

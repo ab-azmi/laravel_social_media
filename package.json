@@ -20,6 +20,8 @@
         "vue-tsc": "^1.8.27"
     },
     "dependencies": {
+        "@ckeditor/ckeditor5-build-classic": "^41.2.1",
+        "@ckeditor/ckeditor5-vue": "^5.1.0",
         "@headlessui/vue": "^1.7.19",
         "@heroicons/vue": "^2.1.1"
     }

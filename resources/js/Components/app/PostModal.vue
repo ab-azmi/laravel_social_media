@@ -12,9 +12,10 @@ import { useForm } from '@inertiajs/vue3';
 import TextAreaInput from '../TextAreaInput.vue';
 import PostUserHeader from './PostUserHeader.vue';
 import { XMarkIcon } from '@heroicons/vue/24/solid';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 const props = defineProps<{
-    post: Post | null,
+    post?: Post | null,
     modelValue: boolean
 }>()
 
@@ -29,8 +30,30 @@ const postForm = useForm({
     body: props.post?.body
 })
 
+const editor = ClassicEditor
+const editorConfig = {
+    toolbar: {
+        items: [
+            'undo',
+            'redo',
+            'heading',
+            '|',
+            'bold',
+            'italic',
+            'link',
+            '|',
+            'blockQuote',
+            'bulletedList',
+            'numberedList',
+            '|',
+            'outdent',
+            'indent',
+        ]
+    },
+}
+
 //update postForm.body when post changes
-watch(() => props.post, (post: Post|null) => {
+watch(() => props.post, (post: Post | null | undefined) => {
     postForm.body = post?.body
 })
 
@@ -38,13 +61,24 @@ function closeModal() {
     show.value = false
 }
 
-function submitForm(){
-    postForm.put(route('posts.update', props.post?.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            show.value = false
-        }
-    })
+function submitForm() {
+    if (props.post) {
+        postForm.put(route('posts.update', props.post?.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                show.value = false
+            }
+        })
+    } else {
+        postForm.post(route('posts.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                show.value = false
+                postForm.body = ''
+            }
+        })
+    }
+
 }
 
 </script>
@@ -66,20 +100,24 @@ function submitForm(){
                             leave-from="opacity-100 scale-100" leave-to="opacity-0 scale-95">
                             <DialogPanel
                                 class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-4 text-left align-middle shadow-xl transition-all">
-                                <DialogTitle as="div" class="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center">
-                                    Update Post
+                                <DialogTitle as="div"
+                                    class="text-lg font-medium leading-6 text-gray-900 flex justify-between items-center">
+                                    <h1 v-if="post">Update Post</h1>
+                                    <h1 v-else>Create Post</h1>
                                     <button>
-                                        <XMarkIcon class="w-5 h-5 text-gray-500 hover:scale-110 transition-all hover:text-blue-500" @click="closeModal" />
+                                        <XMarkIcon
+                                            class="w-5 h-5 text-gray-500 hover:scale-110 transition-all hover:text-blue-500"
+                                            @click="closeModal" />
                                     </button>
                                 </DialogTitle>
-                                <div class="my-4">
+                                <div class="my-4" v-if="post">
                                     <PostUserHeader :post="post" />
                                 </div>
 
                                 <div class="mt-2">
-                                    <TextAreaInput v-model="postForm.body" class="w-full text-slate-500 border border-gray-300 rounded-lg mb-3"
-                                        placeholder="Click here to update post"/>
-                                    
+                                    <ckeditor :editor="editor" v-model="postForm.body" :config="editorConfig">
+                                    </ckeditor>
+
                                 </div>
 
                                 <div class="mt-4 flex justify-end">

@@ -25,4 +25,12 @@ class StoreRequest extends FormRequest
             'body' => 'nullable|string',
         ];
     }
+
+    //turn empty body into empty string
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'body' => $this->body ?? '',
+        ]);
+    }
 }
