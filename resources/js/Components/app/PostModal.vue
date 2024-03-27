@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, computed } from 'vue'
+import { watch, computed, ref } from 'vue'
 import {
     TransitionRoot,
     TransitionChild,
@@ -7,11 +7,11 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import { Post } from '@/types';
+import { Post, Attachment } from '@/types';
 import { useForm } from '@inertiajs/vue3';
-import TextAreaInput from '../TextAreaInput.vue';
 import PostUserHeader from './PostUserHeader.vue';
-import { XMarkIcon } from '@heroicons/vue/24/solid';
+import { BookmarkIcon, PaperClipIcon, XMarkIcon, DocumentIcon } from '@heroicons/vue/24/solid';
+import { TrashIcon } from '@heroicons/vue/24/outline';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 const props = defineProps<{
@@ -29,6 +29,8 @@ const show = computed({
 const postForm = useForm({
     body: props.post?.body
 })
+
+const attachments = ref<Array<Attachment>>([])
 
 const editor = ClassicEditor
 const editorConfig = {
@@ -59,6 +61,8 @@ watch(() => props.post, (post: Post | null | undefined) => {
 
 function closeModal() {
     show.value = false
+    postForm.body = ''
+    attachments.value = []
 }
 
 function submitForm() {
@@ -81,6 +85,39 @@ function submitForm() {
 
 }
 
+async function onAttachmentChoose($event: Event) {
+    for (const file of ($event.target as HTMLInputElement | null)?.files ?? []) {
+        var att = {
+            name: file.name,
+            file: file,
+            url: await readFile(file),
+            mime: file.type
+        }
+
+        attachments.value.push(att)
+    }
+}
+
+async function readFile(file: File) {
+    return new Promise<string>((resolve, reject) => {
+        if (isImage({ mime: file.type })) {
+            const reader = new FileReader()
+            reader.onload = () => {
+                resolve(reader.result as string)
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+        } else {
+            resolve('')
+        }
+    })
+
+}
+
+function isImage(attachment: { mime: string }) {
+    const mime = attachment.mime.split('/')[0];
+    return mime.toLowerCase() === 'image';
+}
 </script>
 
 
@@ -110,6 +147,7 @@ function submitForm() {
                                             @click="closeModal" />
                                     </button>
                                 </DialogTitle>
+
                                 <div class="my-4" v-if="post">
                                     <PostUserHeader :post="post" />
                                 </div>
@@ -120,10 +158,50 @@ function submitForm() {
 
                                 </div>
 
-                                <div class="mt-4 flex justify-end">
+                                <section v-if="attachments" class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-2">
+                                    <div v-for="(att, i) of attachments.slice(0, 4)">
+                                        <div v-if="i === 3" class="bg-slate-100 rounded-lg overflow-hidden w-full h-full text-slate-600">
+                                            <div v-if="isImage(att)" class="relative w-fit">
+                                                <img :src="att.url" alt="" class="object-cover rounded-lg blur-lg brightness-75">
+                                                <span class="absolute top-1/2 left-[30%] text-white"> +{{ attachments.length - 3 }} more</span>
+                                            </div>
+                                        </div>
+                                        <div v-else>
+                                            <div v-if="isImage(att)" class="relative w-fit">
+                                                <img :src="att.url" alt="" class="object-cover rounded-lg">
+                                                <span @click="attachments.splice(attachments.indexOf(att), 1)"
+                                                    class="cursor-pointer absolute top-3 right-3 text-white backdrop-brightness-90 p-3 rounded-lg backdrop-blur-lg">
+                                                    <TrashIcon class="w-5 h-5" />
+                                                </span>
+                                            </div>
+                                            <div v-else
+                                                class="group flex items-center bg-slate-100 rounded-lg py-6 px-3 justify-between text-slate-600 cursor-pointer">
+                                                <div class="flex gap-3">
+                                                    <DocumentIcon class="w-6 h-6 text-slate-500" />
+                                                    {{ att.name?.substring(0, 10) }}...
+                                                </div>
+    
+                                                <span @click="attachments.splice(attachments.indexOf(att), 1)"
+                                                    class="hidden group-hover:block">
+                                                    <TrashIcon class="w-6 h-6 text-slate-500" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <div class="mt-4 flex gap-4 justify-end">
                                     <button type="button"
-                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        class="relative inline-flex gap-2 items-center justify-center rounded-md border border-transparent bg-purple-100 px-4 py-2 text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2">
+                                        <PaperClipIcon class="w-4 h-4" />
+                                        Attachments
+                                        <input multiple @change="onAttachmentChoose" type="file"
+                                            class="absolute top-0 left-0 opacity-0">
+                                    </button>
+                                    <button type="button"
+                                        class="inline-flex gap-2 items-center justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="submitForm">
+                                        <BookmarkIcon class="w-4 h-4" />
                                         Submit
                                     </button>
                                 </div>

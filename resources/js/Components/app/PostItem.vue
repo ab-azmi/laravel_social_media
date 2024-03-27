@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { DocumentIcon, ArrowDownTrayIcon, HeartIcon, ChatBubbleOvalLeftEllipsisIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/solid';
-import { Post } from '@/types';
+import { Attachment, Post } from '@/types';
 import PostUserHeader from './PostUserHeader.vue';
 import { ref } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
